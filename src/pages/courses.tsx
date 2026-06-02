@@ -1,4 +1,4 @@
-import { Button, Card, CircularProgress, Stack, Typography } from "@mui/material";
+import { Alert, Button, Card, CircularProgress, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router.js";
@@ -7,6 +7,7 @@ import { Course } from "@/store/atoms/course.js";
 function Courses() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     const init = async () => {
         try {
@@ -16,6 +17,9 @@ function Courses() {
                 }
             });
             setCourses(response.data.courses);
+            setError("");
+        } catch (err) {
+            setError("Could not load courses right now. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -28,6 +32,14 @@ function Courses() {
     if (loading) {
         return <div style={{display: "flex", justifyContent: "center", paddingTop: 80}}>
             <CircularProgress />
+        </div>;
+    }
+
+    if (error) {
+        return <div style={{maxWidth: 560, margin: "80px auto 0", padding: "0 16px"}}>
+            <Alert severity="error" action={<Button onClick={init}>Retry</Button>}>
+                {error}
+            </Alert>
         </div>;
     }
 

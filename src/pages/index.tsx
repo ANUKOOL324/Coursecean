@@ -21,6 +21,9 @@ export default function Home() {
                   <Typography variant={"h5"}>
                       A place to learn, earn and grow
                   </Typography>
+                  <Typography variant="body1" sx={{mt: 1, maxWidth: 520}}>
+                      Manage signups, login flow, and course content from a single Next.js app while keeping the learning stack small and readable.
+                  </Typography>
                   {!userLoading && !userEmail && <div style={{display: "flex", marginTop: 20}}>
                       <div style={{marginRight: 10}}>
                           <Button
@@ -43,6 +46,9 @@ export default function Home() {
                   </div>}
                   {!userLoading && userEmail && <Stack direction="row" spacing={1} sx={{mt: 2, alignItems: "center", flexWrap: "wrap"}}>
                       <Chip label={userEmail} color="primary" variant="outlined" />
+                      <Typography variant="body1" sx={{mr: 1}}>
+                          You&apos;re signed in. Jump back into the dashboard when you&apos;re ready.
+                      </Typography>
                       <Button
                           size={"large"}
                           variant={"contained"}
