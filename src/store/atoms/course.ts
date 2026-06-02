@@ -5,7 +5,8 @@ export interface Course {
     title: string;
     description: string;
     imageLink: string;
-    price: string;
+    price: number;
+    published?: boolean;
 }
 
 export const courseState = atom<{isLoading: boolean, course: null | Course}>({

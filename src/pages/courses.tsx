@@ -1,4 +1,4 @@
-import { Alert, Button, Card, CircularProgress, Stack, Typography } from "@mui/material";
+import { Alert, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router.js";
@@ -85,6 +85,10 @@ export function Course({course}: {course: Course}) {
         <Typography textAlign={"center"} variant="subtitle1" sx={{minHeight: 56, mt: 1}}>
             {course.description}
         </Typography>
+        <Stack direction="row" spacing={1} justifyContent="center" sx={{mt: 1, flexWrap: "wrap"}}>
+            <Chip label={`₹${course.price.toLocaleString()}`} size="small" />
+            <Chip label={course.published ? "Published" : "Draft"} size="small" color={course.published ? "success" : "default"} variant="outlined" />
+        </Stack>
         <div style={{
             marginTop: 16,
             display: "flex",

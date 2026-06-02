@@ -1,4 +1,4 @@
-import { Button, Card, Stack, Typography } from "@mui/material";
+import { Button, Card, Chip, Stack, Typography } from "@mui/material";
 import axios from "axios";
 import { useRouter } from "next/router.js";
 import { Course } from "@/store/atoms/course.js";
@@ -32,6 +32,10 @@ function Course({course}: {course: Course}) {
         <Typography textAlign={"center"} variant="subtitle1" sx={{minHeight: 56, mt: 1}}>
             {course.description}
         </Typography>
+        <Stack direction="row" spacing={1} justifyContent="center" sx={{mt: 1, flexWrap: "wrap"}}>
+            <Chip label={`₹${course.price.toLocaleString()}`} size="small" />
+            <Chip label={course.published ? "Published" : "Draft"} size="small" color={course.published ? "success" : "default"} variant="outlined" />
+        </Stack>
         <div style={{
             marginTop: 16,
             display: "flex",
