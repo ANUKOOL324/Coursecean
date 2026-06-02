@@ -1,8 +1,6 @@
-import { BASE_URL } from '@/config';
 import { userState } from '@/store/atoms/user';
 import { Button, Card, TextField, Typography } from '@mui/material';
 import axios from 'axios';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { useSetRecoilState } from 'recoil';
@@ -50,7 +48,7 @@ const Login = () => {
                     size={"large"}
                     variant="contained"
                     onClick={async() => {
-                        const response = await axios.post(`${BASE_URL}/admin/signup`, {
+                        const response = await axios.post(`/api/admin/signup`, {
                             username: email,
                             password: password
                         })

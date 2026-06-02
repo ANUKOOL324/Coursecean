@@ -1,4 +1,3 @@
-import { userState } from "../atoms/user";
 import {selector} from "recoil";
 import { courseState } from "../atoms/course";
 
@@ -47,7 +46,7 @@ export const courseImage = selector({
   get: ({get}) => {
     const state = get(courseState);
     if (state.course) {
-        return state.course.image;
+        return state.course.imageLink;
     }
     return "";
   },

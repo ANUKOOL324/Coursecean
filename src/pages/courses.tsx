@@ -3,13 +3,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router.js";
 import { Course } from "@/store/atoms/course.js";
-import { NEXT_URL } from "@/config";
 
 function Courses() {//it is happening here on the client side 
     const [courses, setCourses] = useState([]);
 
     const init = async () => {
-        const response = await axios.get(`${NEXT_URL}/api/admin/courses/`, {
+        const response = await axios.get(`/api/admin/courses/`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }

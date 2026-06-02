@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router.js";
 import { Course } from "@/store/atoms/course.js";
-import { NEXT_URL } from "@/config";
+import type { GetServerSidePropsContext } from "next";
 
 function Courses({courses}: {courses: Course[]}) {
     return <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center"}}>
@@ -35,9 +35,13 @@ function Course({course}: {course: Course}) {
 
 export default Courses;
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
     console.log("hit here")
-    const response = await axios.get(`${NEXT_URL}/api/admin/courses/`, {
+    const forwardedProto = context.req.headers["x-forwarded-proto"];
+    const protocol = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto ?? "http";
+    const host = context.req.headers.host ?? "localhost:3000";
+
+    const response = await axios.get(`${protocol}://${host}/api/admin/courses/`, {
         headers: {
             // Authorization: `Bearer ${localStorage.getItem('token')}`  //can't use u need to understand the use of the cookies here
         }
