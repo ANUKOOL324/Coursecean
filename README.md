@@ -33,7 +33,6 @@ src/
   components/
     Appbar.tsx        # Top navigation and auth-aware actions
     InitUser.tsx      # Initializes user state from the stored token
-  config.ts           # Base URLs used by the frontend and Next API layer
   pages/
     _app.tsx          # Global Recoil provider and layout shell
     _document.tsx     # Custom HTML document
@@ -46,6 +45,9 @@ src/
       hello.ts
       admin/
         courses.ts    # Mock course API route
+        login.ts      # Local admin login API route
+        me.ts         # Local token verification API route
+        signup.ts     # Local admin signup API route
   store/
     atoms/            # Recoil atoms
     selectors/        # Recoil selectors
@@ -70,7 +72,7 @@ This project uses the Pages Router, where files inside `src/pages` automatically
 The app uses Recoil to store authentication-related UI state.
 
 - `userState` tracks the current user email and loading state.
-- `InitUser` runs on app load and validates the stored token through the `/admin/me` endpoint.
+- `InitUser` runs on app load and validates the stored token through the `/api/admin/me` endpoint.
 - `Appbar` reads user state and renders auth-aware navigation.
 - Signup and signin pages update Recoil state after a successful request.
 
@@ -85,13 +87,16 @@ This makes the project useful for comparing React-style client fetching with Nex
 
 ## API Layer
 
-The mock course API is implemented as a Next.js API route:
+The course and auth APIs are implemented as Next.js API routes:
 
 ```txt
 GET /api/admin/courses
+POST /api/admin/signup
+POST /api/admin/login
+GET /api/admin/me
 ```
 
-It returns sample course data from `src/pages/api/admin/courses.ts`. Authentication requests are configured through `BASE_URL` in `src/config.ts`, while course data uses `NEXT_URL`.
+`/api/admin/courses` returns sample course data from `src/pages/api/admin/courses.ts`. The auth routes use a small in-memory store in `src/lib/authStore.ts`, so this project no longer needs a separate Express backend for signup, signin, or token verification during local development.
 
 ## Getting Started
 
@@ -113,7 +118,7 @@ Open the app in the browser:
 http://localhost:3000
 ```
 
-If you run the frontend and mock Next API on different ports, update the values in `src/config.ts`.
+The frontend and API routes run in the same Next.js app, so no separate Express server is required for this learning version.
 
 ## Available Scripts
 
@@ -138,4 +143,4 @@ This project was made as part of the Next.js 13 learning process. The main goals
 
 ## Notes
 
-This is a learning project, so some routes and backend integrations are intentionally simple. The course API is mocked locally, and the authentication flow depends on the configured backend endpoints in `src/config.ts`.
+This is a learning project, so some routes and backend integrations are intentionally simple. The course API is mocked locally, and the authentication store is in memory. Users and tokens reset when the development server restarts.
