@@ -8,17 +8,32 @@ function Courses() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const router = useRouter();
 
     const init = async () => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            setLoading(false);
+            router.push("/signin");
+            return;
+        }
+
         try {
             const response = await axios.get(`/api/admin/courses/`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${token}`
                 }
             });
             setCourses(response.data.courses);
             setError("");
         } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.status === 401) {
+                localStorage.setItem("token", "");
+                router.push("/signin");
+                return;
+            }
+
             setError("Could not load courses right now. Please try again.");
         } finally {
             setLoading(false);

@@ -6,10 +6,20 @@ import { useEffect } from "react";
 export function InitUser() {
     const setUser = useSetRecoilState(userState);   
     const init = async() => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            setUser({
+                isLoading: false,
+                userEmail: null
+            });
+            return;
+        }
+
         try {
             const response = await axios.get(`/api/admin/me`, {
                 headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("token")
+                    "Authorization": "Bearer " + token
                 }
             })
   
