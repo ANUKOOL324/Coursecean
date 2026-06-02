@@ -55,6 +55,7 @@ function Appbar({}) {
                                 isLoading: false,
                                 userEmail: null
                             })
+                            router.push("/")
                         }}
                     >Logout</Button>
                 </div>
