@@ -1,4 +1,4 @@
-import { Button, Card, CircularProgress, Typography } from "@mui/material";
+import { Button, Card, CircularProgress, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router.js";
@@ -37,7 +37,7 @@ function Courses() {
         </div>;
     }
 
-    return <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center"}}>
+    return <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16, padding: 16}}>
         {courses.map(course => {
             return <Course key={course._id} course={course} />;
         })}
@@ -48,19 +48,32 @@ export function Course({course}: {course: Course}) {
     const router = useRouter();
 
     return <Card style={{
-        margin: 10,
-        width: 300,
-        minHeight: 200,
-        padding: 20
+        width: 320,
+        minHeight: 360,
+        padding: 20,
+        display: "flex",
+        flexDirection: "column"
     }}>
         <Typography textAlign={"center"} variant="h5">{course.title}</Typography>
-        <Typography textAlign={"center"} variant="subtitle1">{course.description}</Typography>
-        <img src={course.imageLink} style={{width: 300}} />
-        <div style={{display: "flex", justifyContent: "center", marginTop: 20}}>
+        <Typography textAlign={"center"} variant="subtitle1" sx={{minHeight: 56, mt: 1}}>
+            {course.description}
+        </Typography>
+        <div style={{
+            marginTop: 16,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 180,
+            overflow: "hidden",
+            borderRadius: 8
+        }}>
+            <img src={course.imageLink} alt={course.title} style={{width: "100%", objectFit: "cover"}} />
+        </div>
+        <Stack direction="row" justifyContent="center" sx={{mt: "auto"}}>
             <Button variant="contained" size="large" onClick={() => {
                 router.push("/course/" + course._id);
             }}>Edit</Button>
-        </div>
+        </Stack>
     </Card>;
 }
 

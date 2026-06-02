@@ -1,6 +1,6 @@
 import { isUserLoading } from '@/store/selectors/isUserLoading';
 import { userEmailState } from '@/store/selectors/userEmail';
-import { Button, Grid, Typography } from '@mui/material';
+import { Button, Chip, Grid, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 
@@ -34,13 +34,23 @@ export default function Home() {
                       <div>
                           <Button
                               size={"large"}
-                              variant={"contained"}
+                              variant={"outlined"}
                               onClick={() => {
                                 router.push("/signin")
                               }}
                           >Signin</Button>
                       </div>
                   </div>}
+                  {!userLoading && userEmail && <Stack direction="row" spacing={1} sx={{mt: 2, alignItems: "center", flexWrap: "wrap"}}>
+                      <Chip label={userEmail} color="primary" variant="outlined" />
+                      <Button
+                          size={"large"}
+                          variant={"contained"}
+                          onClick={() => {
+                            router.push("/courses")
+                          }}
+                      >Continue</Button>
+                  </Stack>}
               </div>
               <div>
               </div>
