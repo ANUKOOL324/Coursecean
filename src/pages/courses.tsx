@@ -6,6 +6,7 @@ import { Course } from "@/store/atoms/course.js";
 
 function Courses() {
     const [courses, setCourses] = useState<Course[]>([]);
+    const [purchasedCourseIds, setPurchasedCourseIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const router = useRouter();
@@ -20,16 +21,26 @@ function Courses() {
         }
 
         try {
-            const response = await axios.get(`/api/admin/courses/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            setCourses(response.data.courses);
+            const [coursesResponse, purchasesResponse] = await Promise.all([
+                axios.get(`/api/admin/courses/`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }),
+                axios.get(`/api/purchases`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+            ]);
+
+            setCourses(coursesResponse.data.courses);
+            setPurchasedCourseIds(purchasesResponse.data.courseIds ?? []);
             setError("");
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                 localStorage.setItem("token", "");
+                setLoading(false);
                 router.push("/signin");
                 return;
             }
@@ -41,8 +52,41 @@ function Courses() {
     };
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            setLoading(false);
+            router.push("/signin");
+            return;
+        }
+
         init();
     }, []);
+
+    const buyCourse = async (course: Course) => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            router.push("/signin");
+            return;
+        }
+
+        try {
+            const response = await axios.post(`/api/stripe/create-checkout-session`, {
+                course,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            }
+        } catch (err) {
+            alert("Could not start checkout right now.");
+        }
+    };
 
     if (loading) {
         return <div style={{display: "flex", justifyContent: "center", paddingTop: 80}}>
@@ -66,12 +110,17 @@ function Courses() {
 
     return <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16, padding: 16}}>
         {courses.map(course => {
-            return <Course key={course._id} course={course} />;
+            return <Course
+                key={course._id}
+                course={course}
+                bought={purchasedCourseIds.includes(course._id)}
+                onBuy={() => buyCourse(course)}
+            />;
         })}
     </div>;
 }
 
-export function Course({course}: {course: Course}) {
+export function Course({course, bought, onBuy}: {course: Course, bought?: boolean, onBuy: () => void}) {
     const router = useRouter();
 
     return <Card style={{
@@ -88,6 +137,7 @@ export function Course({course}: {course: Course}) {
         <Stack direction="row" spacing={1} justifyContent="center" sx={{mt: 1, flexWrap: "wrap"}}>
             <Chip label={`₹${course.price.toLocaleString()}`} size="small" />
             <Chip label={course.published ? "Published" : "Draft"} size="small" color={course.published ? "success" : "default"} variant="outlined" />
+            {bought ? <Chip label="Purchased" size="small" color="primary" /> : null}
         </Stack>
         <div style={{
             marginTop: 16,
@@ -100,7 +150,10 @@ export function Course({course}: {course: Course}) {
         }}>
             <img src={course.imageLink} alt={course.title} style={{width: "100%", objectFit: "cover"}} />
         </div>
-        <Stack direction="row" justifyContent="center" sx={{mt: "auto"}}>
+        <Stack direction="row" spacing={1} justifyContent="center" sx={{mt: "auto"}}>
+            <Button variant="outlined" size="large" onClick={onBuy} disabled={bought}>
+                {bought ? "Purchased" : "Buy course"}
+            </Button>
             <Button variant="contained" size="large" onClick={() => {
                 router.push("/course/" + course._id);
             }}>Edit</Button>

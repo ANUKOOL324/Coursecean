@@ -98,6 +98,26 @@ GET /api/admin/me
 
 `/api/admin/courses` returns sample course data from `src/pages/api/admin/courses.ts`. The auth routes use a small in-memory store in `src/lib/authStore.ts`, so this project no longer needs a separate Express backend for signup, signin, or token verification during local development.
 
+## Stripe Checkout
+
+The course cards now include a Stripe Checkout flow in test mode.
+
+Environment variables:
+
+```txt
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+To test webhooks locally, run:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+After payment, Stripe returns to `/success`, and the app verifies the Checkout Session before marking the course as purchased in memory for the current dev server session.
+
 ## Getting Started
 
 Install dependencies:

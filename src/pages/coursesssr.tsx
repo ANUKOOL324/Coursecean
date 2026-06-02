@@ -47,7 +47,33 @@ function Course({course}: {course: Course}) {
         }}>
             <img src={course.imageLink} alt={course.title} style={{width: "100%", objectFit: "cover"}} />
         </div>
-        <Stack direction="row" justifyContent="center" sx={{mt: "auto"}}>
+        <Stack direction="row" spacing={1} justifyContent="center" sx={{mt: "auto"}}>
+            <Button
+                variant="outlined"
+                size="large"
+                onClick={async () => {
+                    const token = localStorage.getItem("token");
+
+                    if (!token) {
+                        router.push("/signin");
+                        return;
+                    }
+
+                    const response = await axios.post(`/api/stripe/create-checkout-session`, {
+                        course,
+                    }, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.data.url) {
+                        window.location.href = response.data.url;
+                    }
+                }}
+            >
+                Buy course
+            </Button>
             <Button variant="contained" size="large" onClick={() => {
                 router.push("/course/" + course._id);
             }}>Edit</Button>
