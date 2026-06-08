@@ -53,6 +53,19 @@ export function getUsernameFromToken(token: string | null) {
   return authStore.sessions[token] ?? null;
 }
 
+// Check if a username belongs to an admin.
+// Admin usernames are listed in .env.local (ADMIN_USERNAMES), not hardcoded here.
+// Example: ADMIN_USERNAMES=admin@test.com,teacher@test.com
+export function isAdminUser(username: string): boolean {
+  const rawList = process.env.ADMIN_USERNAMES ?? "";
+  const adminUsernames = rawList
+    .split(",")
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
+
+  return adminUsernames.includes(username);
+}
+
 function createSession(username: string) {
   const token = crypto.randomBytes(24).toString("hex");
   authStore.sessions[token] = username;
