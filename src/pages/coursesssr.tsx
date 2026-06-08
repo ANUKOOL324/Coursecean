@@ -1,7 +1,7 @@
 import { Button, Card, Chip, Stack, Typography } from "@mui/material";
 import axios from "axios";
-import { useRouter } from "next/router.js";
-import { Course } from "@/store/atoms/course.js";
+import { useRouter } from "next/router";
+import { Course } from "@/store/atoms/course";
 import type { GetServerSidePropsContext } from "next";
 
 function Courses({courses}: {courses: Course[]}) {
