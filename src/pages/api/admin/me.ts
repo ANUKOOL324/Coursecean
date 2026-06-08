@@ -1,4 +1,4 @@
-import { getUsernameFromToken } from "@/lib/authStore";
+import { getUsernameFromToken, isAdminUser } from "@/lib/authStore";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,5 +14,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  return res.status(200).json({ username });
+  // Tell the frontend whether this user is an admin.
+  // The list of admin usernames comes from ADMIN_USERNAMES in .env.local.
+  return res.status(200).json({
+    username,
+    isAdmin: isAdminUser(username),
+  });
 }
