@@ -1,4 +1,4 @@
-# Coursecean
+# Coursecean (week-10)
 
 Coursecean is a course-selling admin interface built while learning the Next.js 13 project structure. The project started as a React application and was converted into a Next.js application to practice file-based routing, API routes, server-side rendering, TypeScript setup, and global state management inside a Next.js codebase.
 
