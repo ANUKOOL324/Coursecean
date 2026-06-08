@@ -24,10 +24,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: "Method not allowed" });
     }
 
+    // We read the webhook secret from environment variables (loaded from .env.local by Next.js).
+    // This secret is provided by Stripe (either from the dashboard or from the `stripe listen` command in local testing).
+    // Never hardcode this value.
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!secret) {
-        return res.status(500).json({ message: "STRIPE_WEBHOOK_SECRET is not set" });
+        // Helpful error for beginners. Common cause: .env.local was edited but the dev server was not restarted.
+        return res.status(500).json({
+            message:
+                "STRIPE_WEBHOOK_SECRET is not set. " +
+                "Add it to your .env.local file and fully restart the development server (npm run dev). " +
+                "For local testing you usually get this value by running `stripe listen --forward-to localhost:3000/api/stripe/webhook`."
+        });
     }
 
     const stripe = getStripe();
