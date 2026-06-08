@@ -1,51 +1,43 @@
+import { fetchCurrentUser } from "@/lib/fetchCurrentUser";
 import { userState } from "@/store/atoms/user";
 import { useSetRecoilState } from "recoil";
-import axios from "axios";
 import { useEffect } from "react";
 
 export function InitUser() {
-    const setUser = useSetRecoilState(userState);   
-    const init = async() => {
+    const setUser = useSetRecoilState(userState);
+
+    const init = async () => {
         const token = localStorage.getItem("token");
 
         if (!token) {
             setUser({
                 isLoading: false,
-                userEmail: null
+                userEmail: null,
+                isAdmin: false,
             });
             return;
         }
 
         try {
-            const response = await axios.get(`/api/admin/me`, {
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            })
-  
-            if (response.data.username) {
-                setUser({
-                    isLoading: false,
-                    userEmail: response.data.username
-                })
-            } else {
-                setUser({
-                    isLoading: false,
-                    userEmail: null
-                })
-            }
-        } catch (e) {
-  
+            const currentUser = await fetchCurrentUser(token);
+
             setUser({
                 isLoading: false,
-                userEmail: null
-            })
+                userEmail: currentUser.username,
+                isAdmin: currentUser.isAdmin,
+            });
+        } catch (e) {
+            setUser({
+                isLoading: false,
+                userEmail: null,
+                isAdmin: false,
+            });
         }
     };
-  
+
     useEffect(() => {
         init();
     }, []);
-  
-    return <></>
-  }
+
+    return <></>;
+}
