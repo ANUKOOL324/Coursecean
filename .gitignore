@@ -34,3 +34,6 @@ tmp-runtime-logs/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local secrets
+Untitled
