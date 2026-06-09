@@ -4,64 +4,63 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
 export const config = {
-    api: {
-        bodyParser: false,
-    },
+  api: {
+    bodyParser: false,
+  },
 };
 
-async function readRawBody(req: NextApiRequest) {
-    const chunks: Buffer[] = [];
+async function readRawBody(request: NextApiRequest) {
+  const chunks: Buffer[] = [];
 
-    for await (const chunk of req) {
-        chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-    }
+  for await (const chunk of request) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
 
-    return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks).toString("utf8");
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ message: "Method not allowed" });
+export default async function handler(request: NextApiRequest, response: NextApiResponse) {
+  if (request.method !== "POST") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!secret) {
+    return response.status(500).json({
+      message:
+        "STRIPE_WEBHOOK_SECRET is not set. " +
+        "Add it to your .env.local file and fully restart the development server (npm run dev). " +
+        "For local testing you get this value by running `stripe listen --forward-to localhost:3000/api/stripe/webhook`."
+    });
+  }
+
+  const stripe = getStripe();
+  const signature = request.headers["stripe-signature"];
+
+  if (typeof signature !== "string") {
+    return response.status(400).json({ message: "Missing Stripe signature" });
+  }
+
+  try {
+    const rawBody = await readRawBody(request);
+    const event = stripe.webhooks.constructEvent(rawBody, signature, secret);
+
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const username = session.metadata?.username;
+      const courseId = session.metadata?.courseId;
+      const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+      if (username && courseId) {
+        // Use await to save purchase in MongoDB
+        await markPurchased(username, courseId, session.id, amountPaid);
+      }
     }
 
-    // We read the webhook secret from environment variables (loaded from .env.local by Next.js).
-    // This secret is provided by Stripe (either from the dashboard or from the `stripe listen` command in local testing).
-    // Never hardcode this value.
-    const secret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!secret) {
-        // Helpful error for beginners. Common cause: .env.local was edited but the dev server was not restarted.
-        return res.status(500).json({
-            message:
-                "STRIPE_WEBHOOK_SECRET is not set. " +
-                "Add it to your .env.local file and fully restart the development server (npm run dev). " +
-                "For local testing you usually get this value by running `stripe listen --forward-to localhost:3000/api/stripe/webhook`."
-        });
-    }
-
-    const stripe = getStripe();
-    const signature = req.headers["stripe-signature"];
-
-    if (typeof signature !== "string") {
-        return res.status(400).json({ message: "Missing Stripe signature" });
-    }
-
-    try {
-        const rawBody = await readRawBody(req);
-        const event = stripe.webhooks.constructEvent(rawBody, signature, secret);
-
-        if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
-            const session = event.data.object as Stripe.Checkout.Session;
-            const username = session.metadata?.username;
-            const courseId = session.metadata?.courseId;
-
-            if (username && courseId) {
-                markPurchased(username, courseId);
-            }
-        }
-
-        return res.status(200).json({ received: true });
-    } catch (error) {
-        return res.status(400).json({ message: "Webhook error" });
-    }
+    return response.status(200).json({ received: true });
+  } catch (error) {
+    console.error("Stripe webhook processing error:", error);
+    return response.status(400).json({ message: "Webhook error" });
+  }
 }

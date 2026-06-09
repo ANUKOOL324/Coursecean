@@ -2,20 +2,24 @@ import { getPurchasedCourseIds } from "@/lib/purchaseStore";
 import { getUsernameFromToken } from "@/lib/authStore";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== "GET") {
-        return res.status(405).json({ message: "Method not allowed" });
-    }
+export default async function handler(request: NextApiRequest, response: NextApiResponse) {
+  if (request.method !== "GET") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
 
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    const username = getUsernameFromToken(token);
+  const authorizationHeader = request.headers.authorization;
+  const token = authorizationHeader?.startsWith("Bearer ") ? authorizationHeader.slice(7) : null;
+  const username = getUsernameFromToken(token);
 
-    if (!username) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
+  if (!username) {
+    return response.status(401).json({ message: "Invalid token" });
+  }
 
-    return res.status(200).json({
-        courseIds: getPurchasedCourseIds(username),
-    });
+  try {
+    const courseIds = await getPurchasedCourseIds(username);
+    return response.status(200).json({ courseIds });
+  } catch (error) {
+    console.error("GET purchases error:", error);
+    return response.status(500).json({ message: "Internal server error" });
+  }
 }
