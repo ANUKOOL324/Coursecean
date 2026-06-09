@@ -58,6 +58,14 @@ function Courses() {
     const [newCoursePrice, setNewCoursePrice] = useState("");
     const [newCourseImageLink, setNewCourseImageLink] = useState("");
 
+    // Admin-only: dialog state for editing a course.
+    const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+    const [updatingCourse, setUpdatingCourse] = useState(false);
+    const [editCourseTitle, setEditCourseTitle] = useState("");
+    const [editCourseDescription, setEditCourseDescription] = useState("");
+    const [editCoursePrice, setEditCoursePrice] = useState("");
+    const [editCourseImageLink, setEditCourseImageLink] = useState("");
+
     // Which course the user clicked to view full details (null = modal closed).
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -99,8 +107,8 @@ function Courses() {
             setCourses(coursesResponse.data.courses);
             setPurchasedCourseIds(purchasesResponse.data.courseIds ?? []);
             setError("");
-        } catch (err) {
-            if (axios.isAxiosError(err) && err.response?.status === 401) {
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
                 localStorage.setItem("token", "");
                 setLoading(false);
                 router.push("/signin");
@@ -202,7 +210,7 @@ function Courses() {
 
         if (router.query.view === 'purchases') {
             setActiveView("purchases");
-        } else if (router.query.view === 'all') {
+        } else {
             setActiveView("all");
         }
 
@@ -235,8 +243,8 @@ function Courses() {
                     Authorization: `Bearer ${token}`
                 }
             })
-                .then((res) => {
-                    setPurchasedCourseIds(res.data.courseIds ?? []);
+                .then((response) => {
+                    setPurchasedCourseIds(response.data.courseIds ?? []);
                 })
                 .catch(() => {
                     // Silently ignore - user can still use the page or refresh manually.
@@ -250,6 +258,61 @@ function Courses() {
             window.removeEventListener("focus", handleFocus);
         };
     }, []);
+
+    const openEditCourse = (course: Course) => {
+        setEditingCourse(course);
+        setEditCourseTitle(course.title);
+        setEditCourseDescription(course.description);
+        setEditCoursePrice(String(course.price));
+        setEditCourseImageLink(course.imageLink);
+    };
+
+    const updateCourse = async () => {
+        const token = localStorage.getItem("token");
+        if (!token || !editingCourse) return;
+
+        const price = Number(editCoursePrice);
+        if (!editCourseTitle.trim() || !editCourseDescription.trim() || !editCourseImageLink.trim()) {
+            showSnackbar("Please fill in title, description, and image link.", "warning");
+            return;
+        }
+
+        if (!Number.isFinite(price) || price <= 0) {
+            showSnackbar("Please enter a valid price greater than 0.", "warning");
+            return;
+        }
+
+        setUpdatingCourse(true);
+        try {
+            await axios.put(
+                `/api/admin/courses`,
+                {
+                    _id: editingCourse._id,
+                    title: editCourseTitle.trim(),
+                    description: editCourseDescription.trim(),
+                    price,
+                    imageLink: editCourseImageLink.trim(),
+                    published: editingCourse.published ?? true,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setEditingCourse(null);
+            await init();
+            showSnackbar("Course updated successfully!", "success");
+        } catch (error) {
+            const serverMessage = axios.isAxiosError(error) && error.response?.data?.message
+                ? error.response.data.message
+                : "Could not update course. Please try again.";
+            showSnackbar(serverMessage, "error");
+        } finally {
+            setUpdatingCourse(false);
+        }
+    };
 
     const resetAddCourseForm = () => {
         setNewCourseTitle("");
@@ -302,9 +365,9 @@ function Courses() {
             resetAddCourseForm();
             await init();
             showSnackbar("Course added successfully!", "success");
-        } catch (err) {
-            const serverMessage = axios.isAxiosError(err) && err.response?.data?.message
-                ? err.response.data.message
+        } catch (error) {
+            const serverMessage = axios.isAxiosError(error) && error.response?.data?.message
+                ? error.response.data.message
                 : "Could not add course. Please try again.";
             showSnackbar(serverMessage, "error");
         } finally {
@@ -361,11 +424,11 @@ function Courses() {
                 "error"
             );
             setBuyingCourseId(null);
-        } catch (err) {
+        } catch (error) {
             // Show the actual error message from the server when possible.
             // This helps with setup issues (missing STRIPE_SECRET_KEY, wrong .env.local, etc.).
-            const serverMessage = axios.isAxiosError(err) && err.response?.data?.message
-                ? err.response.data.message
+            const serverMessage = axios.isAxiosError(error) && error.response?.data?.message
+                ? error.response.data.message
                 : "Could not start checkout. Check your internet connection and try again.";
             showSnackbar(serverMessage, "error");
             // Only clear the loading state if something went wrong.
@@ -485,7 +548,7 @@ function Courses() {
                     placeholder="Search by title or description..."
                     fullWidth
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(event) => setSearchQuery(event.target.value)}
                     size="medium"
                 />
 
@@ -499,7 +562,7 @@ function Courses() {
                         control={
                             <Checkbox
                                 checked={publishedOnly}
-                                onChange={(e) => setPublishedOnly(e.target.checked)}
+                                onChange={(event) => setPublishedOnly(event.target.checked)}
                             />
                         }
                         label="Show only published courses"
@@ -610,15 +673,26 @@ function Courses() {
                 >
                     {displayedCourses.map((course) => {
                         const isBought = purchasedCourseIds.includes(course._id);
+                        const courseId = course._id || course.id;
 
                         return (
                             <CourseCard
                                 key={course._id}
                                 course={course}
                                 bought={isBought}
-                                onBuy={() => buyCourse(course)}
+                                onBuy={() => {
+                                    if (isBought || isAdmin) {
+                                        router.push(`/courses/${courseId}`);
+                                    } else {
+                                        buyCourse(course);
+                                    }
+                                }}
                                 loading={buyingCourseId === course._id}
-                                onViewDetails={() => setSelectedCourse(course)}
+                                onViewCourse={() => router.push(`/courses/${courseId}`)}
+                                onQuickView={() => setSelectedCourse(course)}
+                                isAdmin={isAdmin}
+                                onManageCurriculum={() => router.push(`/courses/${courseId}/curriculum`)}
+                                onEdit={() => openEditCourse(course)}
                             />
                         );
                     })}
@@ -631,10 +705,24 @@ function Courses() {
                 course={selectedCourse}
                 bought={selectedCourse ? purchasedCourseIds.includes(selectedCourse._id) : false}
                 loading={selectedCourse ? buyingCourseId === selectedCourse._id : false}
+                isAdmin={isAdmin}
                 onClose={() => setSelectedCourse(null)}
                 onBuy={() => {
                     if (selectedCourse) {
-                        buyCourse(selectedCourse);
+                        const isBought = purchasedCourseIds.includes(selectedCourse._id);
+                        const courseId = selectedCourse._id || selectedCourse.id;
+                        if (isBought || isAdmin) {
+                            router.push(`/courses/${courseId}`);
+                        } else {
+                            buyCourse(selectedCourse);
+                        }
+                    }
+                }}
+                onViewCurriculum={() => {
+                    if (selectedCourse) {
+                        const courseId = selectedCourse._id || selectedCourse.id;
+                        router.push(`/courses/${courseId}`);
+                        setSelectedCourse(null);
                     }
                 }}
             />
@@ -658,14 +746,14 @@ function Courses() {
                         fullWidth
                         margin="normal"
                         value={newCourseTitle}
-                        onChange={(e) => setNewCourseTitle(e.target.value)}
+                        onChange={(event) => setNewCourseTitle(event.target.value)}
                     />
                     <TextField
                         label="Description"
                         fullWidth
                         margin="normal"
                         value={newCourseDescription}
-                        onChange={(e) => setNewCourseDescription(e.target.value)}
+                        onChange={(event) => setNewCourseDescription(event.target.value)}
                     />
                     <TextField
                         label="Price (INR)"
@@ -673,14 +761,14 @@ function Courses() {
                         margin="normal"
                         type="number"
                         value={newCoursePrice}
-                        onChange={(e) => setNewCoursePrice(e.target.value)}
+                        onChange={(event) => setNewCoursePrice(event.target.value)}
                     />
                     <TextField
                         label="Image URL"
                         fullWidth
                         margin="normal"
                         value={newCourseImageLink}
-                        onChange={(e) => setNewCourseImageLink(e.target.value)}
+                        onChange={(event) => setNewCourseImageLink(event.target.value)}
                     />
                 </DialogContent>
                 <DialogActions>
@@ -699,6 +787,68 @@ function Courses() {
                         disabled={addingCourse}
                     >
                         {addingCourse ? "Saving..." : "Save Course"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Admin-only dialog for editing an existing course */}
+            <Dialog
+                open={editingCourse !== null}
+                onClose={() => {
+                    if (!updatingCourse) {
+                        setEditingCourse(null);
+                    }
+                }}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Edit course details</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Title"
+                        fullWidth
+                        margin="normal"
+                        value={editCourseTitle}
+                        onChange={(event) => setEditCourseTitle(event.target.value)}
+                    />
+                    <TextField
+                        label="Description"
+                        fullWidth
+                        margin="normal"
+                        value={editCourseDescription}
+                        onChange={(event) => setEditCourseDescription(event.target.value)}
+                    />
+                    <TextField
+                        label="Price (INR)"
+                        fullWidth
+                        margin="normal"
+                        type="number"
+                        value={editCoursePrice}
+                        onChange={(event) => setEditCoursePrice(event.target.value)}
+                    />
+                    <TextField
+                        label="Image URL"
+                        fullWidth
+                        margin="normal"
+                        value={editCourseImageLink}
+                        onChange={(event) => setEditCourseImageLink(event.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setEditingCourse(null);
+                        }}
+                        disabled={updatingCourse}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={updateCourse}
+                        disabled={updatingCourse}
+                    >
+                        {updatingCourse ? "Saving..." : "Save Changes"}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -1,31 +1,19 @@
-import { Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Course } from "@/store/atoms/course";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80";
 
-// Simple modal to show full course details before the user buys.
-// The parent (courses.tsx) controls which course is open and handles the Buy action.
-
 interface CourseDetailModalProps {
-  // Whether the modal is visible.
   open: boolean;
-
-  // The course to display. Can be null when closed.
   course: Course | null;
-
-  // If the user already owns this course.
   bought?: boolean;
-
-  // True while Stripe checkout is starting for this course.
   loading?: boolean;
-
-  // Called when the user closes the modal (X, backdrop, or Close button).
   onClose: () => void;
-
-  // Called when the user clicks Buy inside the modal.
   onBuy: () => void;
+  onViewCurriculum?: () => void; // Triggered when navigating to the full details/syllabus
+  isAdmin?: boolean;
 }
 
 export default function CourseDetailModal({
@@ -35,68 +23,117 @@ export default function CourseDetailModal({
   loading,
   onClose,
   onBuy,
+  onViewCurriculum,
+  isAdmin,
 }: CourseDetailModalProps) {
   const [imageSrc, setImageSrc] = useState(course?.imageLink || FALLBACK_IMAGE);
 
-  // Reset the image when the user opens a different course in the modal.
   useEffect(() => {
     setImageSrc(course?.imageLink || FALLBACK_IMAGE);
   }, [course?._id, course?.imageLink]);
 
-  // Don't render content if no course is selected.
   if (!course) {
     return null;
   }
 
+  const isPurchasedCourse = bought && !isAdmin;
+  const shouldShowGoToCourseButton = bought || isAdmin;
+
+  let actionButtonText = "Buy course";
+  if (loading) {
+    actionButtonText = "Processing...";
+  } else if (shouldShowGoToCourseButton) {
+    actionButtonText = "Go to Course";
+  }
+
+  const actionButtonVariant = shouldShowGoToCourseButton ? "outlined" : "contained";
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{course.title}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700, color: "#1A1F36" }}>{course.title}</DialogTitle>
 
       <DialogContent>
         <Stack spacing={2}>
-          {/* Full description — not truncated like on the small card */}
-          <Typography variant="body1" color="text.secondary">
+          {/* Full description */}
+          <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
             {course.description}
           </Typography>
 
-          {/* Price and status chips — same info as the card, but easier to read */}
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Chip label={`₹${course.price.toLocaleString()}`} color="primary" />
+          {/* Price and status chips */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Chip label={`₹${course.price.toLocaleString()}`} color="primary" sx={{ fontWeight: 600 }} />
             <Chip
               label={course.published ? "Published" : "Draft"}
               color={course.published ? "success" : "default"}
               variant="outlined"
             />
-            {bought && <Chip label="Purchased" color="secondary" />}
+            {isPurchasedCourse && <Chip label="Purchased" color="secondary" />}
           </Stack>
 
-          {/* Larger image so users can preview the course */}
-          <div
-            style={{
-              borderRadius: 8,
+          {/* Larger image */}
+          <Box
+            sx={{
+              borderRadius: 2,
               overflow: "hidden",
               maxHeight: 280,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              bgcolor: "grey.100",
             }}
           >
-            <img
+            <Box
+              component="img"
               src={imageSrc}
               alt={course.title}
-              style={{ width: "100%", objectFit: "cover" }}
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
               onError={() => setImageSrc(FALLBACK_IMAGE)}
             />
-          </div>
+          </Box>
         </Stack>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button
-          variant="contained"
-          onClick={onBuy}
-          disabled={bought || loading}
-        >
-          {loading ? "Processing..." : bought ? "Purchased" : "Buy course"}
+      <DialogActions sx={{ px: 3, pb: 2.5, justifyContent: "space-between" }}>
+        <Button onClick={onClose} sx={{ fontWeight: 600, color: "text.secondary" }}>
+          Close
         </Button>
+        <Stack direction="row" spacing={1.5}>
+          {onViewCurriculum && (
+            <Button
+              variant="outlined"
+              onClick={onViewCurriculum}
+              sx={{
+                fontWeight: 600,
+                borderColor: "#CBD5E1",
+                color: "#1A1F36",
+                textTransform: "none",
+              }}
+            >
+              {shouldShowGoToCourseButton ? "Go to Course" : "Preview Curriculum"}
+            </Button>
+          )}
+          {!shouldShowGoToCourseButton && (
+            <Button
+              variant={actionButtonVariant}
+              onClick={onBuy}
+              disabled={loading}
+              sx={{
+                fontWeight: 600,
+                bgcolor: "#C2FFD1",
+                color: "#1A1F36",
+                textTransform: "none",
+                "&:hover": { bgcolor: "#A9FFBE" }
+              }}
+            >
+              {actionButtonText}
+            </Button>
+          )}
+        </Stack>
       </DialogActions>
     </Dialog>
   );
