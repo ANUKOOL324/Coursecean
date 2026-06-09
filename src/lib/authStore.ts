@@ -1,51 +1,72 @@
 import crypto from "crypto";
-
-type User = {
-  username: string;
-  password: string;
-};
+import bcryptjs from "bcryptjs";
+import { connectToDatabase } from "./db";
+import { User } from "./models";
 
 type AuthStore = {
-  users: User[];
   sessions: Record<string, string>;
 };
 
 declare global {
-  // Keeps the learning-project auth store alive during dev-server HMR.
   var courseceanAuthStore: AuthStore | undefined;
 }
 
 const authStore: AuthStore = globalThis.courseceanAuthStore ?? {
-  users: [],
   sessions: {},
 };
 
 globalThis.courseceanAuthStore = authStore;
 
-export function createUser(username: string, password: string) {
-  const existingUser = authStore.users.find((user) => user.username === username);
+export async function createUser(username: string, password: string): Promise<string | null> {
+  await connectToDatabase();
+
+  const lowercaseUsername = username.toLowerCase();
+  const existingUser = await User.findOne({ email: lowercaseUsername });
 
   if (existingUser) {
     return null;
   }
 
-  authStore.users.push({ username, password });
-  return createSession(username);
+  const saltRounds = 10;
+  const hashedPassword = await bcryptjs.hash(password, saltRounds);
+  
+  const newUser = new User({
+    email: lowercaseUsername,
+    password: hashedPassword,
+    role: isAdminUser(lowercaseUsername) ? "ADMIN" : "STUDENT",
+    profile: {
+      firstName: "",
+      lastName: "",
+      avatar: "",
+      bio: ""
+    },
+    metadata: {}
+  });
+
+  await newUser.save();
+
+  return createSession(lowercaseUsername);
 }
 
-export function loginUser(username: string, password: string) {
-  const user = authStore.users.find(
-    (storedUser) => storedUser.username === username && storedUser.password === password
-  );
+export async function loginUser(username: string, password: string): Promise<string | null> {
+  await connectToDatabase();
+
+  const lowercaseUsername = username.toLowerCase();
+  const user = await User.findOne({ email: lowercaseUsername });
 
   if (!user) {
     return null;
   }
 
-  return createSession(username);
+  const isPasswordCorrect = await bcryptjs.compare(password, user.password);
+  if (!isPasswordCorrect) {
+    return null;
+  }
+
+  return createSession(lowercaseUsername);
 }
 
-export function getUsernameFromToken(token: string | null) {
+export function getUsernameFromToken(token: string | null): string | null {
   if (!token) {
     return null;
   }
@@ -53,21 +74,19 @@ export function getUsernameFromToken(token: string | null) {
   return authStore.sessions[token] ?? null;
 }
 
-// Check if a username belongs to an admin.
-// Admin usernames are listed in .env.local (ADMIN_USERNAMES), not hardcoded here.
-// Example: ADMIN_USERNAMES=admin@test.com,teacher@test.com
 export function isAdminUser(username: string): boolean {
   const rawList = process.env.ADMIN_USERNAMES ?? "";
   const adminUsernames = rawList
     .split(",")
     .map((name) => name.trim())
-    .filter((name) => name.length > 0);
+    .filter((name) => name.length > 0)
+    .map((name) => name.toLowerCase());
 
-  return adminUsernames.includes(username);
+  return adminUsernames.includes(username.toLowerCase());
 }
 
-function createSession(username: string) {
+function createSession(username: string): string {
   const token = crypto.randomBytes(24).toString("hex");
-  authStore.sessions[token] = username;
+  authStore.sessions[token] = username.toLowerCase();
   return token;
 }
