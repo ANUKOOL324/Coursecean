@@ -51,18 +51,40 @@ function Appbar() {
         }
     };
 
-    // Toggle search expand
-    const toggleSearch = (e: React.MouseEvent) => {
+    // Helper to determine if search bar is currently expanded
+    const isCurrentlyExpanded = () => {
+        const isMobile = typeof window !== "undefined" && window.innerWidth < 600;
+        if (isMobile) {
+            return searchExpanded;
+        } else {
+            return !scrolled || searchExpanded;
+        }
+    };
+
+    // Handle search icon click (collapsible on mobile/scrolled desktop, persistent on top desktop)
+    const handleSearchIconClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!searchExpanded) {
+        if (!isCurrentlyExpanded()) {
             setSearchExpanded(true);
             setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 100);
-        } else if (!searchQuery.trim()) {
-            setSearchExpanded(false);
-        } else {
+        } else if (searchQuery.trim()) {
             handleSearchSubmit();
+        } else {
+            const isMobile = typeof window !== "undefined" && window.innerWidth < 600;
+            if (isMobile || scrolled) {
+                setSearchExpanded(false);
+            } else {
+                searchInputRef.current?.focus();
+            }
+        }
+    };
+
+    // Handle search input blur
+    const handleSearchInputBlur = () => {
+        if (!searchQuery.trim()) {
+            setSearchExpanded(false);
         }
     };
 
@@ -96,7 +118,7 @@ function Appbar() {
 
     const navLinks = [
         { label: "Home", path: "/", param: undefined },
-        { label: "Browse Courses", path: "/courses", param: undefined },
+        { label: "Courses", path: "/courses", param: undefined },
         { label: "My Learning", path: "/courses", param: "purchases", authRequired: true }
     ];
 
@@ -110,8 +132,8 @@ function Appbar() {
                     top: 0,
                     width: "100%",
                     zIndex: 1000,
-                    height: scrolled ? 56 : { xs: 64, md: 80 },
-                    bgcolor: scrolled ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.9)",
+                    height: scrolled ? 48 : { xs: 56, md: 68 },
+                    bgcolor: scrolled ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.9)", // Revert back to light/white color
                     backdropFilter: "blur(16px)",
                     WebkitBackdropFilter: "blur(16px)",
                     borderBottom: "1px solid",
@@ -120,8 +142,28 @@ function Appbar() {
                     display: "flex",
                     alignItems: "center",
                     transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    overflow: "hidden", // necessary for absolute grid overlay
                 }}
             >
+                {/* Math Grid Pattern Overlay - Dark/Grey lines for light background */}
+                <Box 
+                    sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 0,
+                        opacity: 0.8,
+                        backgroundSize: "40px 40px",
+                        backgroundImage: `
+                            linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px)
+                        `,
+                        pointerEvents: "none",
+                    }}
+                />
+
                 <Container
                     maxWidth={false}
                     sx={{
@@ -130,135 +172,152 @@ function Appbar() {
                         alignItems: "center",
                         height: "100%",
                         px: { xs: 2, sm: 4, md: 6, lg: 8 },
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
-                    {/* Left Brand and Hamburger */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
-                        {/* Hamburger Button (Mobile Only) */}
-                        <Box
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            sx={{
-                                display: { xs: "flex", md: "none" },
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                                width: 18,
-                                height: 12,
-                                cursor: "pointer",
-                                mr: 1,
-                                position: "relative",
-                                zIndex: 1100,
-                            }}
-                        >
-                            <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(5px) rotate(45deg)" : "none", transition: "0.3s" }} />
-                            <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", opacity: mobileMenuOpen ? 0 : 1, transition: "0.3s" }} />
-                            <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(-5px) rotate(-45deg)" : "none", transition: "0.3s" }} />
-                        </Box>
-
-                        {/* Logo and Brand Title */}
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            onClick={handleHome}
-                            id="logo-text"
-                            sx={{
-                                cursor: "pointer",
-                                userSelect: "none",
-                                transition: "all 0.3s ease",
-                                transform: scrolled ? "scale(0.95)" : "scale(1)",
-                                transformOrigin: "left center",
-                                "&:hover": { opacity: 0.85 },
-                            }}
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: 26, color: "#0056D2" }}>
-                                school
-                            </span>
-                            <Typography
-                                variant="h5"
+                    {/* Left Brand, Hamburger & Navigation Links */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: { md: 4, lg: 5 }, height: "100%" }}>
+                        {/* Brand and Hamburger Wrapper */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
+                            {/* Hamburger Button (Mobile Only) */}
+                            <Box
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 sx={{
-                                    fontWeight: 800,
-                                    letterSpacing: "-0.03em",
-                                    color: "primary.main",
-                                    fontSize: "1.25rem",
-                                    fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                                    display: { xs: "flex", md: "none" },
+                                    flexDirection: "column",
+                                    justifyContent: "space-between",
+                                    width: 18,
+                                    height: 12,
+                                    cursor: "pointer",
+                                    mr: 1,
+                                    position: "relative",
+                                    zIndex: 1100,
                                 }}
                             >
-                                Coursecean
-                            </Typography>
-                        </Stack>
-                    </Box>
+                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(5px) rotate(45deg)" : "none", transition: "0.3s" }} />
+                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", opacity: mobileMenuOpen ? 0 : 1, transition: "0.3s" }} />
+                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(-5px) rotate(-45deg)" : "none", transition: "0.3s" }} />
+                            </Box>
 
-                    {/* Center Navigation Links - Desktop Only */}
-                    <Stack
-                        direction="row"
-                        spacing={3.5}
-                        sx={{
-                            display: { xs: "none", md: "flex" },
-                            height: "100%",
-                            alignItems: "stretch",
-                        }}
-                    >
-                        {navLinks.map((link) => {
-                            if (link.authRequired && !userEmail) return null;
-                            const active = isLinkActive(link.path, link.param);
-                            return (
+                            {/* Logo and Brand Title */}
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                onClick={handleHome}
+                                id="logo-text"
+                                sx={{
+                                    cursor: "pointer",
+                                    userSelect: "none",
+                                    transition: "all 0.3s ease",
+                                    transform: scrolled ? "scale(0.95)" : "scale(1)",
+                                    transformOrigin: "left center",
+                                    "&:hover": { opacity: 0.85 },
+                                }}
+                            >
                                 <Box
-                                    key={link.label}
-                                    onClick={() => {
-                                        if (link.param) {
-                                            router.push(`${link.path}?view=${link.param}`);
-                                        } else {
-                                            router.push(link.path);
-                                        }
-                                    }}
                                     sx={{
-                                        height: "100%",
+                                        width: 36,
+                                        height: 36,
+                                        bgcolor: "rgba(0, 86, 210, 0.08)",
+                                        border: "1px solid rgba(0, 86, 210, 0.16)",
+                                        borderRadius: 1.5,
                                         display: "flex",
                                         alignItems: "center",
-                                        cursor: "pointer",
-                                        px: 0.5,
-                                        "&:hover .nav-link-text": {
-                                            color: "primary.main",
-                                        },
-                                        "&:hover .nav-link-text::after": {
-                                            transform: "scaleX(1)",
-                                            backgroundColor: active ? "primary.main" : "rgba(0, 86, 210, 0.4)",
-                                        }
+                                        justifyContent: "center",
                                     }}
                                 >
-                                    <Typography
-                                        className="nav-link-text"
-                                        component="span"
+                                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#0056D2" }}>
+                                        school
+                                    </span>
+                                </Box>
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontWeight: 800,
+                                        letterSpacing: "-0.03em",
+                                        color: "primary.main",
+                                        fontSize: "1.25rem",
+                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                                    }}
+                                >
+                                    Coursecean
+                                </Typography>
+                            </Stack>
+                        </Box>
+
+                        {/* Navigation Links - Desktop Only */}
+                        <Stack
+                            direction="row"
+                            spacing={3}
+                            sx={{
+                                display: { xs: "none", md: "flex" },
+                                height: "100%",
+                                alignItems: "stretch",
+                            }}
+                        >
+                            {navLinks.map((link) => {
+                                if (link.authRequired && !userEmail) return null;
+                                const active = isLinkActive(link.path, link.param);
+                                return (
+                                    <Box
+                                        key={link.label}
+                                        onClick={() => {
+                                            if (link.param) {
+                                                router.push(`${link.path}?view=${link.param}`);
+                                            } else {
+                                                router.push(link.path);
+                                            }
+                                        }}
                                         sx={{
-                                            position: "relative",
-                                            color: active ? "primary.main" : "text.secondary",
-                                            fontWeight: 600,
-                                            fontSize: "0.9375rem",
-                                            fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
-                                            pb: 0.75, // tight 6px bottom gap for perfect line positioning
-                                            transition: "color 0.2s ease",
-                                            // Underline Indicator close to the text
-                                            "&::after": {
-                                                content: '""',
-                                                position: "absolute",
-                                                bottom: 0,
-                                                left: 0,
-                                                width: "100%",
-                                                height: "3px",
-                                                backgroundColor: "primary.main",
-                                                borderRadius: "3px 3px 0 0",
-                                                transform: active ? "scaleX(1)" : "scaleX(0)",
-                                                transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                                                transformOrigin: "center",
+                                            height: "100%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                            px: 0.5,
+                                            "&:hover .nav-link-text": {
+                                                color: "primary.main",
+                                            },
+                                            "&:hover .nav-link-text::after": {
+                                                transform: "scaleX(1)",
+                                                backgroundColor: active ? "primary.main" : "rgba(0, 86, 210, 0.4)",
                                             }
                                         }}
                                     >
-                                        {link.label}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Stack>
+                                        <Typography
+                                            className="nav-link-text"
+                                            component="span"
+                                            sx={{
+                                                position: "relative",
+                                                color: active ? "primary.main" : "text.primary",
+                                                fontWeight: 600,
+                                                fontSize: "0.85rem", // Decreased font size a bit
+                                                fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
+                                                transition: "color 0.2s ease",
+                                                // Underline Indicator close to the text
+                                                "&::after": {
+                                                    content: '""',
+                                                    position: "absolute",
+                                                    bottom: -6,
+                                                    left: 0,
+                                                    width: "100%",
+                                                    height: "3px",
+                                                    backgroundColor: "primary.main",
+                                                    borderRadius: "3px 3px 0 0",
+                                                    transform: active ? "scaleX(1)" : "scaleX(0)",
+                                                    transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                    transformOrigin: "center",
+                                                }
+                                            }}
+                                        >
+                                            {link.label}
+                                        </Typography>
+                                    </Box>
+                                );
+                            })}
+                        </Stack>
+                    </Box>
 
                     {/* Right Toolbar: Search and Auth */}
                     <Stack direction="row" spacing={1.5} alignItems="center" sx={{ height: "100%" }}>
@@ -270,18 +329,24 @@ function Appbar() {
                                 display: "flex",
                                 alignItems: "center",
                                 height: 40,
-                                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                                width: searchExpanded ? { xs: 150, sm: 240 } : 40,
-                                bgcolor: searchExpanded ? "rgba(0, 0, 0, 0.03)" : "transparent",
+                                transition: "all 0.3s ease",
+                                width: { xs: searchExpanded ? 150 : 40, sm: (!scrolled || searchExpanded) ? 200 : 40, md: (!scrolled || searchExpanded) ? 240 : 40 },
+                                bgcolor: { xs: searchExpanded ? "rgba(0, 0, 0, 0.03)" : "transparent", sm: (!scrolled || searchExpanded) ? "rgba(0, 0, 0, 0.03)" : "transparent" },
+                                border: { xs: searchExpanded ? "1px solid rgba(0, 0, 0, 0.08)" : "none", sm: (!scrolled || searchExpanded) ? "1px solid rgba(0, 0, 0, 0.08)" : "none" },
                                 borderRadius: 99,
-                                px: searchExpanded ? 1.5 : 0,
+                                px: { xs: searchExpanded ? 1.5 : 0, sm: (!scrolled || searchExpanded) ? 1.5 : 0 },
                                 overflow: "hidden",
+                                "&:focus-within": {
+                                    bgcolor: "#FFFFFF",
+                                    borderColor: "primary.main",
+                                    boxShadow: "0 0 0 3px rgba(0, 86, 210, 0.1)",
+                                }
                             }}
                         >
                             <Box
                                 component="span"
                                 className="material-symbols-outlined"
-                                onClick={toggleSearch}
+                                onClick={handleSearchIconClick}
                                 sx={{
                                     fontSize: 22,
                                     color: "text.secondary",
@@ -302,13 +367,10 @@ function Appbar() {
                                 ref={searchInputRef}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                onBlur={() => {
-                                    if (!searchQuery.trim()) {
-                                        setSearchExpanded(false);
-                                    }
-                                }}
+                                onBlur={handleSearchInputBlur}
                                 placeholder="Search courses..."
                                 sx={{
+                                    display: { xs: searchExpanded ? "block" : "none", sm: (!scrolled || searchExpanded) ? "block" : "none" },
                                     width: "100%",
                                     bgcolor: "transparent",
                                     border: "none",
@@ -378,6 +440,7 @@ function Appbar() {
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
+                                        fontSize: "0.85rem", // Decreased font size a bit
                                         fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                     }}
                                 >
@@ -396,10 +459,11 @@ function Appbar() {
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
+                                        fontSize: "0.85rem", // Decreased font size a bit
                                         fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                     }}
                                 >
-                                    Signup
+                                    Sign up
                                 </Button>
                                 <Button
                                     size="small"
@@ -411,10 +475,11 @@ function Appbar() {
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
+                                        fontSize: "0.85rem", // Decreased font size a bit
                                         fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                     }}
                                 >
-                                    Signin
+                                    Log in
                                 </Button>
                             </>
                         )}
@@ -527,10 +592,11 @@ function Appbar() {
                                     fontWeight: 600,
                                     borderRadius: 2,
                                     textTransform: "none",
+                                    fontSize: "0.875rem",
                                     fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                 }}
                             >
-                                Signup
+                                Sign up
                             </Button>
                             <Button
                                 fullWidth
@@ -544,10 +610,11 @@ function Appbar() {
                                     fontWeight: 600,
                                     borderRadius: 2,
                                     textTransform: "none",
+                                    fontSize: "0.875rem",
                                     fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                 }}
                             >
-                                Signin
+                                Log in
                             </Button>
                         </>
                     )}

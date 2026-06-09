@@ -28,7 +28,7 @@ export default function App({ Component, pageProps }: AppProps) {
         {isAuthPage ? (
           <Component {...pageProps} />
         ) : (
-          <Box sx={{ pt: { xs: "64px", md: "80px" } }}>
+          <Box sx={{ pt: { xs: "56px", md: "68px" } }}>
             <Component {...pageProps} />
           </Box>
         )}

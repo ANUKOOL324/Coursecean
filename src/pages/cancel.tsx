@@ -16,7 +16,7 @@ function Cancel() {
     // Important: on cancel we NEVER mark anything as purchased.
 
     return (
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 80, paddingInline: 16 }}>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 68, paddingInline: 16 }}>
             <Card style={{ maxWidth: 520, width: "100%", padding: 32 }}>
                 <Stack spacing={3} alignItems="center">
                     <Typography variant="h4" textAlign="center">

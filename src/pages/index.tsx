@@ -67,7 +67,14 @@ export default function Home() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        sx={{ py: { xs: 3, md: 4, lg: 5 }, position: 'relative', overflow: 'hidden' }}
+        sx={{
+          minHeight: { md: 'calc(100vh - 68px)', xs: 'auto' },
+          display: 'flex',
+          alignItems: 'center',
+          py: { xs: 6, md: 8 },
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={3} alignItems="center">
@@ -332,8 +339,8 @@ export default function Home() {
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
         sx={{
           borderY: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          borderColor: 'rgba(255, 255, 255, 0.08)',
+          bgcolor: '#1A1F36', // Dark background matching the specialization section below
           py: 3,
           overflow: 'hidden',
           position: 'relative',
@@ -348,7 +355,9 @@ export default function Home() {
               textTransform: 'uppercase',
               letterSpacing: '0.15em',
               fontWeight: 700,
-              color: 'text.secondary',
+              color: '#EAF4FF',
+              opacity: 0.9,
+              fontSize: '0.65rem',
               mb: 2.5,
             }}
           >
@@ -362,7 +371,7 @@ export default function Home() {
             overflow: 'hidden',
             width: '100%',
             position: 'relative',
-            // Fade out overlay on edges matching background.paper (#ffffff)
+            // Fade out overlay on edges matching background (#1A1F36)
             '&::before, &::after': {
               content: '""',
               position: 'absolute',
@@ -374,11 +383,11 @@ export default function Home() {
             },
             '&::before': {
               left: 0,
-              background: 'linear-gradient(to right, #FFFFFF 20%, rgba(255, 255, 255, 0))',
+              background: 'linear-gradient(to right, #1A1F36 20%, rgba(26, 31, 54, 0))',
             },
             '&::after': {
               right: 0,
-              background: 'linear-gradient(to left, #FFFFFF 20%, rgba(255, 255, 255, 0))',
+              background: 'linear-gradient(to left, #1A1F36 20%, rgba(26, 31, 54, 0))',
             },
           }}
         >
@@ -409,13 +418,13 @@ export default function Home() {
                   spacing={0.75}
                   alignItems="center"
                   sx={{
-                    color: 'text.secondary',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     opacity: 0.65,
                     transition: 'all 0.25s ease',
                     cursor: 'pointer',
                     '&:hover': {
                       opacity: 0.95,
-                      color: 'primary.main',
+                      color: '#88A9FF', // Theme pastel blue on hover
                       transform: 'translateY(-1px)',
                     },
                   }}
@@ -423,7 +432,7 @@ export default function Home() {
                   <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
                     {partner.icon}
                   </span>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: 'inherit' }}>
                     {partner.name}
                   </Typography>
                 </Stack>
@@ -439,13 +448,13 @@ export default function Home() {
                   spacing={0.75}
                   alignItems="center"
                   sx={{
-                    color: 'text.secondary',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     opacity: 0.65,
                     transition: 'all 0.25s ease',
                     cursor: 'pointer',
                     '&:hover': {
                       opacity: 0.95,
-                      color: 'primary.main',
+                      color: '#88A9FF', // Theme pastel blue on hover
                       transform: 'translateY(-1px)',
                     },
                   }}
@@ -453,7 +462,7 @@ export default function Home() {
                   <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
                     {partner.icon}
                   </span>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: 'inherit' }}>
                     {partner.name}
                   </Typography>
                 </Stack>
@@ -489,7 +498,7 @@ export default function Home() {
               linear-gradient(rgba(142, 146, 141, 0.16) 1px, transparent 1px),
               linear-gradient(90deg, rgba(142, 146, 141, 0.16) 1px, transparent 1px)
             `,
-            backgroundSize: '24px 24px',
+            backgroundSize: '40px 40px',
           }}
         />
 
@@ -1079,40 +1088,59 @@ export default function Home() {
       <Box
         sx={{
           py: { xs: 4, md: 6 },
-          bgcolor: 'primary.main',
+          bgcolor: '#0056cc', // Brand Blue matching signup/signin left panel
           color: '#FFFFFF',
           position: 'relative',
           overflow: 'hidden',
           textAlign: 'center',
+          // Radial glow gradients from signup/signin
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '-20%',
+            right: '-10%',
+            width: '60%',
+            height: '80%',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
+            filter: 'blur(60px)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            zIndex: 1,
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: '-10%',
+            left: '-5%',
+            width: '40%',
+            height: '50%',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+            filter: 'blur(40px)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }
         }}
       >
-        {/* Background blobs for premium depth */}
-        <Box
+        {/* Math Grid Pattern Overlay */}
+        <Box 
           sx={{
             position: 'absolute',
-            top: -100,
-            left: -100,
-            width: 400,
-            height: 400,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
-            filter: 'blur(40px)',
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -100,
-            right: -100,
-            width: 400,
-            height: 400,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
-            filter: 'blur(40px)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0,
+            opacity: 0.8,
+            backgroundSize: '40px 40px',
+            backgroundImage: `
+              linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px)
+            `
           }}
         />
 
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2 }}>
           <Typography
             component="h2"
             sx={{

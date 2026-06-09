@@ -6,7 +6,7 @@ import type { GetServerSidePropsContext } from "next";
 
 function Courses({courses}: {courses: Course[]}) {
     if (!courses.length) {
-        return <div style={{display: "flex", justifyContent: "center", paddingTop: 80}}>
+        return <div style={{display: "flex", justifyContent: "center", paddingTop: 68}}>
             <Typography variant="h6">No courses available right now.</Typography>
         </div>;
     }
