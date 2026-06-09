@@ -228,7 +228,7 @@ function Signin() {
                         display: { xs: "none", md: "block" }
                     }}
                 >
-                    © {new Date().getFullYear()} Courseocean Inc. All rights reserved.
+                    © {new Date().getFullYear()} Coursecean Inc. All rights reserved.
                 </Box>
             </Box>
 
@@ -382,7 +382,7 @@ function Signin() {
                     {/* Sign Up Redirect Link */}
                     <Box sx={{ mt: 4, textAlign: "left" }}>
                         <Typography sx={{ color: "#4B5563", fontSize: "0.95rem" }}>
-                            New to Courseocean?{" "}
+                            New to Coursecean?{" "}
                             <Box
                                 component="span"
                                 onClick={() => router.push("/signup")}

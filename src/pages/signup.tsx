@@ -228,7 +228,7 @@ function Signup() {
                         display: { xs: "none", md: "block" }
                     }}
                 >
-                    © {new Date().getFullYear()} Courseocean Inc. All rights reserved.
+                    © {new Date().getFullYear()} Coursecean Inc. All rights reserved.
                 </Box>
             </Box>
 
