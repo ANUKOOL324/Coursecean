@@ -64,9 +64,9 @@ export default function Home() {
       {/* 1. Hero Section */}
       <Box
         component={motion.section}
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.2, ease: [0.215, 0.61, 0.355, 1] }}
         sx={{
           minHeight: { md: 'calc(100vh - 68px)', xs: 'auto' },
           display: 'flex',
@@ -335,8 +335,8 @@ export default function Home() {
         component={motion.div}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 1.2, ease: [0.215, 0.61, 0.355, 1], delay: 0.05 }}
         sx={{
           borderY: '1px solid',
           borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -395,7 +395,7 @@ export default function Home() {
             sx={{
               display: 'flex',
               width: 'max-content',
-              animation: 'marqueePartners 30s linear infinite',
+              animation: 'marqueePartners 65s linear infinite',
               '&:hover': {
                 animationPlayState: 'paused',
               },
@@ -475,10 +475,10 @@ export default function Home() {
       {/* 3. Bento Grid - Most Popular Courses */}
       <Box
         component={motion.section}
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 1.3, ease: [0.215, 0.61, 0.355, 1] }}
         sx={{
           py: { xs: 4, md: 6 },
           bgcolor: '#F5F7FB',
@@ -676,10 +676,10 @@ export default function Home() {
       {/* 4. Top Rated Specializations (Horizontal Scroll) */}
       <Box
         component={motion.section}
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 1.3, ease: [0.215, 0.61, 0.355, 1] }}
         sx={{ py: { xs: 4, md: 6 }, bgcolor: '#1A1F36', borderY: '1px solid rgba(255, 255, 255, 0.06)' }}
       >
         <Container maxWidth="lg">
@@ -720,7 +720,7 @@ export default function Home() {
               sx={{
                 display: 'flex',
                 width: 'max-content',
-                animation: 'marqueeSpec 30s linear infinite',
+                animation: 'marqueeSpec 65s linear infinite',
                 '&:hover': {
                   animationPlayState: 'paused',
                 },
@@ -917,10 +917,10 @@ export default function Home() {
       {/* 5. Features Section (Bento Style) */}
       <Box
         component={motion.section}
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 1.3, ease: [0.215, 0.61, 0.355, 1] }}
         sx={{ py: { xs: 4, md: 6 } }}
       >
         <Container maxWidth="lg">
