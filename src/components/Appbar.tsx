@@ -44,6 +44,7 @@ function Appbar() {
     // Handle search submission
     const handleSearchSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
+        setMobileMenuOpen(false);
         if (searchQuery.trim()) {
             router.push(`/courses?search=${encodeURIComponent(searchQuery.trim())}`);
         } else {
@@ -51,10 +52,10 @@ function Appbar() {
         }
     };
 
-    // Helper to determine if search bar is currently expanded
+    // Helper to determine if search bar is currently expanded (tablet only — xs uses drawer search)
     const isCurrentlyExpanded = () => {
-        const isMobile = typeof window !== "undefined" && window.innerWidth < 600;
-        if (isMobile) {
+        const isTablet = typeof window !== "undefined" && window.innerWidth >= 600 && window.innerWidth < 900;
+        if (isTablet) {
             return searchExpanded;
         } else {
             return !scrolled || searchExpanded;
@@ -72,8 +73,8 @@ function Appbar() {
         } else if (searchQuery.trim()) {
             handleSearchSubmit();
         } else {
-            const isMobile = typeof window !== "undefined" && window.innerWidth < 600;
-            if (isMobile || scrolled) {
+            const isTablet = typeof window !== "undefined" && window.innerWidth >= 600 && window.innerWidth < 900;
+            if (isTablet || scrolled) {
                 setSearchExpanded(false);
             } else {
                 searchInputRef.current?.focus();
@@ -168,95 +169,78 @@ function Appbar() {
                     maxWidth={false}
                     sx={{
                         display: "flex",
-                        justifyContent: "space-between",
                         alignItems: "center",
                         height: "100%",
-                        px: { xs: 2, sm: 4, md: 6, lg: 8 },
+                        width: "100%",
+                        px: { xs: 1.5, sm: 4, md: 6, lg: 8 },
                         position: "relative",
                         zIndex: 1,
+                        minWidth: 0,
+                        gap: { xs: 1, md: 1.5 },
                     }}
                 >
-                    {/* Left Brand, Hamburger & Navigation Links */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: { md: 4, lg: 5 }, height: "100%" }}>
-                        {/* Brand and Hamburger Wrapper */}
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
-                            {/* Hamburger Button (Mobile Only) */}
-                            <Box
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                sx={{
-                                    display: { xs: "flex", md: "none" },
-                                    flexDirection: "column",
-                                    justifyContent: "space-between",
-                                    width: 18,
-                                    height: 12,
-                                    cursor: "pointer",
-                                    mr: 1,
-                                    position: "relative",
-                                    zIndex: 1100,
-                                }}
-                            >
-                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(5px) rotate(45deg)" : "none", transition: "0.3s" }} />
-                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", opacity: mobileMenuOpen ? 0 : 1, transition: "0.3s" }} />
-                                <Box sx={{ width: 18, height: 2, bgcolor: "#1A1F36", transform: mobileMenuOpen ? "translateY(-5px) rotate(-45deg)" : "none", transition: "0.3s" }} />
-                            </Box>
-
-                            {/* Logo and Brand Title */}
-                            <Stack
-                                direction="row"
-                                spacing={1}
-                                alignItems="center"
-                                onClick={handleHome}
-                                id="logo-text"
-                                sx={{
-                                    cursor: "pointer",
-                                    userSelect: "none",
-                                    transition: "all 0.3s ease",
-                                    transform: scrolled ? "scale(0.95)" : "scale(1)",
-                                    transformOrigin: "left center",
-                                    "&:hover": { opacity: 0.85 },
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        width: 36,
-                                        height: 36,
-                                        bgcolor: "rgba(0, 86, 210, 0.08)",
-                                        border: "1px solid rgba(0, 86, 210, 0.16)",
-                                        borderRadius: 1.5,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#0056D2" }}>
-                                        school
-                                    </span>
-                                </Box>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        fontWeight: 800,
-                                        letterSpacing: "-0.03em",
-                                        color: "primary.main",
-                                        fontSize: "1.25rem",
-                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
-                                    }}
-                                >
-                                    Coursecean
-                                </Typography>
-                            </Stack>
-                        </Box>
-
-                        {/* Navigation Links - Desktop Only */}
+                    {/* Left: Logo (always pinned left) */}
+                    <Box sx={{ display: "flex", alignItems: "center", height: "100%", minWidth: 0, flexShrink: 0 }}>
                         <Stack
                             direction="row"
-                            spacing={3}
+                            spacing={1}
+                            alignItems="center"
+                            onClick={handleHome}
+                            id="logo-text"
                             sx={{
-                                display: { xs: "none", md: "flex" },
-                                height: "100%",
-                                alignItems: "stretch",
+                                cursor: "pointer",
+                                userSelect: "none",
+                                transition: "all 0.3s ease",
+                                transform: scrolled ? "scale(0.95)" : "scale(1)",
+                                transformOrigin: "left center",
+                                "&:hover": { opacity: 0.85 },
                             }}
                         >
+                            <Box
+                                sx={{
+                                    width: { xs: 32, sm: 36 },
+                                    height: { xs: 32, sm: 36 },
+                                    bgcolor: "rgba(0, 86, 210, 0.08)",
+                                    border: "1px solid rgba(0, 86, 210, 0.16)",
+                                    borderRadius: 1.5,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#0056D2" }}>
+                                    school
+                                </span>
+                            </Box>
+                            <Typography
+                                variant="h5"
+                                sx={{
+                                    fontWeight: 800,
+                                    letterSpacing: "-0.03em",
+                                    color: "primary.main",
+                                    fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                                    fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                Coursecean
+                            </Typography>
+                        </Stack>
+                    </Box>
+
+                    {/* Center: Navigation Links (desktop only) */}
+                    <Stack
+                        direction="row"
+                        spacing={3}
+                        sx={{
+                            display: { xs: "none", md: "flex" },
+                            height: "100%",
+                            alignItems: "stretch",
+                            flex: 1,
+                            ml: { md: 4, lg: 5 },
+                        }}
+                    >
                             {navLinks.map((link) => {
                                 if (link.authRequired && !userEmail) return null;
                                 const active = isLinkActive(link.path, link.param);
@@ -316,25 +300,36 @@ function Appbar() {
                                     </Box>
                                 );
                             })}
-                        </Stack>
-                    </Box>
+                    </Stack>
 
-                    {/* Right Toolbar: Search and Auth */}
-                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ height: "100%" }}>
-                        {/* Interactive Collapsible Search */}
+                    {/* Right: Search + Auth (tablet & desktop only) */}
+                    <Stack
+                        direction="row"
+                        spacing={{ xs: 0.75, sm: 1 }}
+                        alignItems="center"
+                        sx={{
+                            display: { xs: "none", sm: "flex" },
+                            height: "100%",
+                            flex: 1,
+                            minWidth: 0,
+                            justifyContent: "flex-end",
+                        }}
+                    >
+                        {/* Interactive Collapsible Search — hidden on xs (search lives in drawer) */}
                         <Box
                             component="form"
                             onSubmit={handleSearchSubmit}
                             sx={{
-                                display: "flex",
+                                display: { xs: "none", sm: "flex" },
                                 alignItems: "center",
                                 height: 40,
                                 transition: "all 0.3s ease",
-                                width: { xs: searchExpanded ? 150 : 40, sm: (!scrolled || searchExpanded) ? 200 : 40, md: (!scrolled || searchExpanded) ? 240 : 40 },
-                                bgcolor: { xs: searchExpanded ? "rgba(0, 0, 0, 0.03)" : "transparent", sm: (!scrolled || searchExpanded) ? "rgba(0, 0, 0, 0.03)" : "transparent" },
-                                border: { xs: searchExpanded ? "1px solid rgba(0, 0, 0, 0.08)" : "none", sm: (!scrolled || searchExpanded) ? "1px solid rgba(0, 0, 0, 0.08)" : "none" },
+                                width: { sm: searchExpanded ? 200 : 40, md: (!scrolled || searchExpanded) ? 240 : 40 },
+                                minWidth: { sm: searchExpanded ? 0 : 40, md: 40 },
+                                bgcolor: { sm: searchExpanded ? "rgba(0, 0, 0, 0.03)" : "transparent", md: (!scrolled || searchExpanded) ? "rgba(0, 0, 0, 0.03)" : "transparent" },
+                                border: { sm: searchExpanded ? "1px solid rgba(0, 0, 0, 0.08)" : "none", md: (!scrolled || searchExpanded) ? "1px solid rgba(0, 0, 0, 0.08)" : "none" },
                                 borderRadius: 99,
-                                px: { xs: searchExpanded ? 1.5 : 0, sm: (!scrolled || searchExpanded) ? 1.5 : 0 },
+                                px: { sm: searchExpanded ? 1.5 : 0, md: (!scrolled || searchExpanded) ? 1.5 : 0 },
                                 overflow: "hidden",
                                 "&:focus-within": {
                                     bgcolor: "#FFFFFF",
@@ -370,7 +365,7 @@ function Appbar() {
                                 onBlur={handleSearchInputBlur}
                                 placeholder="Search courses..."
                                 sx={{
-                                    display: { xs: searchExpanded ? "block" : "none", sm: (!scrolled || searchExpanded) ? "block" : "none" },
+                                    display: { sm: searchExpanded ? "block" : "none", md: (!scrolled || searchExpanded) ? "block" : "none" },
                                     width: "100%",
                                     bgcolor: "transparent",
                                     border: "none",
@@ -395,7 +390,7 @@ function Appbar() {
                                         spacing={1}
                                         alignItems="center"
                                         sx={{
-                                            display: { xs: "none", sm: "flex" },
+                                            display: { xs: "none", md: "flex" },
                                             bgcolor: "rgba(0, 86, 210, 0.04)",
                                             px: 1.5,
                                             py: 0.5,
@@ -427,7 +422,7 @@ function Appbar() {
                                             height: 18,
                                             borderRadius: "4px",
                                             letterSpacing: "0.02em",
-                                            display: { xs: "none", sm: "inline-flex" }
+                                            display: { xs: "none", md: "inline-flex" }
                                         }}
                                     />
                                 )}
@@ -436,11 +431,12 @@ function Appbar() {
                                     variant="contained"
                                     onClick={handleLogout}
                                     sx={{
+                                        display: { xs: "none", md: "inline-flex" },
                                         height: 36,
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
-                                        fontSize: "0.85rem", // Decreased font size a bit
+                                        fontSize: "0.85rem",
                                         fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
                                     }}
                                 >
@@ -454,13 +450,15 @@ function Appbar() {
                                     variant="outlined"
                                     onClick={() => router.push("/signup")}
                                     sx={{
+                                        display: { xs: "none", md: "inline-flex" },
                                         px: 2,
                                         height: 36,
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
-                                        fontSize: "0.85rem", // Decreased font size a bit
-                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                                        fontSize: "0.85rem",
+                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
                                     Sign up
@@ -470,13 +468,15 @@ function Appbar() {
                                     variant="contained"
                                     onClick={() => router.push("/signin")}
                                     sx={{
+                                        display: { xs: "none", md: "inline-flex" },
                                         px: 2,
                                         height: 36,
                                         fontWeight: 600,
                                         borderRadius: 2,
                                         textTransform: "none",
-                                        fontSize: "0.85rem", // Decreased font size a bit
-                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                                        fontSize: "0.85rem",
+                                        fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
                                     Log in
@@ -484,12 +484,58 @@ function Appbar() {
                             </>
                         )}
                     </Stack>
+
+                    {/* Spacer on xs so hamburger stays at extreme right */}
+                    <Box sx={{ flex: 1, display: { xs: "block", sm: "none" } }} />
+
+                    {/* Hamburger — pinned to extreme right on smaller screens */}
+                    <Box
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                        sx={{
+                            display: { xs: "flex", md: "none" },
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            bgcolor: "rgba(0, 86, 210, 0.08)",
+                            border: "1px solid rgba(0, 86, 210, 0.16)",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            ml: { xs: 0, sm: 0 },
+                            position: "relative",
+                            zIndex: 1100,
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                bgcolor: "rgba(0, 86, 210, 0.12)",
+                            },
+                            "&:active": {
+                                transform: "scale(0.96)",
+                            },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 16,
+                                height: 10,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                position: "relative",
+                            }}
+                        >
+                            <Box sx={{ width: 16, height: 2, bgcolor: "#1A1F36", borderRadius: 1, transform: mobileMenuOpen ? "translateY(4px) rotate(45deg)" : "none", transition: "0.3s" }} />
+                            <Box sx={{ width: 16, height: 2, bgcolor: "#1A1F36", borderRadius: 1, opacity: mobileMenuOpen ? 0 : 1, transition: "0.3s" }} />
+                            <Box sx={{ width: 16, height: 2, bgcolor: "#1A1F36", borderRadius: 1, transform: mobileMenuOpen ? "translateY(-4px) rotate(-45deg)" : "none", transition: "0.3s" }} />
+                        </Box>
+                    </Box>
                 </Container>
             </Box>
 
             {/* Mobile Drawer Menu */}
             <Drawer
-                anchor="left"
+                anchor="right"
                 open={mobileMenuOpen}
                 onClose={() => setMobileMenuOpen(false)}
                 PaperProps={{
@@ -497,26 +543,114 @@ function Appbar() {
                         width: 280,
                         bgcolor: "background.paper",
                         p: 3,
+                        display: "flex",
+                        flexDirection: "column",
                     }
                 }}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 4 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 28, color: "#0056D2" }}>
-                        school
-                    </span>
-                    <Typography
-                        variant="h5"
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 28, color: "#0056D2" }}>
+                            school
+                        </span>
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 800,
+                                color: "primary.main",
+                                fontSize: "1.25rem",
+                                fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                            }}
+                        >
+                            Coursecean
+                        </Typography>
+                    </Box>
+                    <Box
+                        onClick={() => setMobileMenuOpen(false)}
+                        aria-label="Close menu"
                         sx={{
-                            fontWeight: 800,
-                            color: "primary.main",
-                            fontSize: "1.25rem",
-                            fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif'
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            bgcolor: "rgba(0, 86, 210, 0.08)",
+                            border: "1px solid rgba(0, 86, 210, 0.16)",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                bgcolor: "rgba(0, 86, 210, 0.12)",
+                            },
+                            "&:active": {
+                                transform: "scale(0.96)",
+                            },
                         }}
                     >
-                        Coursecean
-                    </Typography>
+                        <span className="material-symbols-outlined" style={{ fontSize: 20, color: "#1A1F36" }}>
+                            close
+                        </span>
+                    </Box>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
+
+                {/* Search — inside drawer on very small screens */}
+                <Box
+                    component="form"
+                    onSubmit={handleSearchSubmit}
+                    sx={{
+                        display: { xs: "flex", sm: "none" },
+                        alignItems: "center",
+                        mb: 2,
+                        px: 1.5,
+                        py: 0.5,
+                        bgcolor: "rgba(0, 0, 0, 0.03)",
+                        border: "1px solid rgba(0, 0, 0, 0.08)",
+                        borderRadius: 99,
+                        "&:focus-within": {
+                            bgcolor: "#FFFFFF",
+                            borderColor: "primary.main",
+                            boxShadow: "0 0 0 3px rgba(0, 86, 210, 0.1)",
+                        },
+                    }}
+                >
+                    <Box
+                        component="span"
+                        className="material-symbols-outlined"
+                        sx={{
+                            fontSize: 22,
+                            color: "text.secondary",
+                            display: "flex",
+                            alignItems: "center",
+                            flexShrink: 0,
+                        }}
+                    >
+                        search
+                    </Box>
+                    <Box
+                        component="input"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search courses..."
+                        sx={{
+                            width: "100%",
+                            bgcolor: "transparent",
+                            border: "none",
+                            outline: "none",
+                            fontSize: "0.875rem",
+                            color: "text.primary",
+                            ml: 1,
+                            py: 0.75,
+                            fontFamily: '"Montserrat Variable", -apple-system, system-ui, sans-serif',
+                            "&::placeholder": {
+                                color: "text.secondary",
+                                opacity: 0.6,
+                            },
+                        }}
+                    />
+                </Box>
 
                 <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     {navLinks.map((link) => {
